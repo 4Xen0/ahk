@@ -1,5 +1,7 @@
-﻿MsgBox TB loaded open roblox(if already opened ur good) get tappin
-; Must be in 1920x1080 Res, Full Screen, Low GFX
+﻿; Advanced Triggerbot Script with Enhanced Search Logic
+
+MsgBox, TB loaded. Open Roblox. (If already opened, you're good to go!) Get tappin!
+; Note: Must be in 1920x1080 resolution, full screen, low graphics settings.
 
 ; Initialize
 #NoEnv
@@ -17,69 +19,114 @@ SendMode Input
 CoordMode, Pixel, Screen
 
 ; Configuration
-
 key_hold_mode := "-" ; To toggle On / Off
 key_exit := "End" ; Panic key
 key_hold := "RButton" ; Button / Key to hold to use
 
 pixel_box := 5 ; Fov (In Pixels)
-pixel_sens := 55 ; Color Sensetivity (lower it to make it detect less shades of black, higher to do the opposite)
+pixel_sens := 55 ; Color Sensitivity (lower it to make it detect fewer shades, higher to detect more)
 pixel_color := ["0x000000", "0xFFFFFF"] ; Black and White colors
 
 click_delay := 15 ; Delay in MS
+debug_mode := true ; Set to true to display debug messages
+smooth_cursor := true ; Set to true for smooth cursor movement
+fov_expand_rate := 10 ; Rate at which FOV expands dynamically
+fov_max := 100 ; Max FOV expansion size
 
+; Calculate Screen Bounds (Centered FOV)
+original_pixel_box := pixel_box ; Save original FOV
+center_x := A_ScreenWidth // 2
+center_y := A_ScreenHeight // 2
+SetFOVBounds()
 
-; ----------------------------------------------------------------------------------------------------------------------- ;
-; |                                          DO NOT CHANGE ANYTHING BELOW HERE                                          | ;
-; ----------------------------------------------------------------------------------------------------------------------- ;
-
-; Screen Bounds
-leftbound := A_ScreenWidth / 2 - pixel_box
-rightbound := A_ScreenWidth / 2 + pixel_box
-topbound := A_ScreenHeight / 2 - pixel_box
-bottombound := A_ScreenHeight / 2 + pixel_box
-
-; Setting Keys
-hotkey, %key_hold_mode%, holdmode
-hotkey, %key_exit%, terminate
+; Set Hotkeys
+Hotkey, %key_hold_mode%, ToggleHoldMode
+Hotkey, %key_exit%, Terminate
 return
 
-start:
-terminate:
-Sleep 400
-exitapp
-return
+; Functions
+SetFOVBounds() {
+    global pixel_box, center_x, center_y, leftbound, rightbound, topbound, bottombound
+    leftbound := center_x - pixel_box
+    rightbound := center_x + pixel_box
+    topbound := center_y - pixel_box
+    bottombound := center_y + pixel_box
+}
 
-holdmode:
+ToggleHoldMode:
 global toggle
 toggle := !toggle
 if (toggle) {
-    settimer, loop2, 1
+    if (debug_mode)
+        MsgBox, Triggerbot Activated.
+    SetTimer, SearchLoop, 1
 } else {
-    settimer, loop2, off
+    if (debug_mode)
+        MsgBox, Triggerbot Deactivated.
+    SetTimer, SearchLoop, Off
+    pixel_box := original_pixel_box ; Reset FOV
+    SetFOVBounds()
 }
 return
 
-loop2:
+Terminate:
+ExitApp
+return
+
+SearchLoop:
 While toggle and GetKeyState(key_hold, "P") {
-    PixelSearch()
+    PixelSearchAdvanced()
 }
 return
 
-#if
-PixelSearch() {
+PixelSearchAdvanced() {
     global
-    PixelSearch, FoundX, FoundY, leftbound, topbound, rightbound, bottombound, pixel_color, pixel_sens, Fast RGB
-    If !(ErrorLevel)
-        {
-            If !GetKeyState("LButton")
-                {
-                    ClickPixel()
-                    sleep, click_delay
-                }
+    ; Iterate through target colors
+    for index, color in pixel_color {
+        PixelSearch, FoundX, FoundY, leftbound, topbound, rightbound, bottombound, %color%, pixel_sens, Fast RGB
+        if (!ErrorLevel) {
+            ; Target found
+            if (!GetKeyState("LButton")) {
+                ClickPixel(FoundX, FoundY)
+                Sleep, click_delay
+            }
+            pixel_box := original_pixel_box ; Reset FOV
+            SetFOVBounds()
+            return
         }
-        return
     }
-ClickPixel() {
+    ; Expand FOV if no target is found
+    ExpandFOV()
+    return
+}
+
+ClickPixel(x, y) {
+    global debug_mode, smooth_cursor
+    ; Move cursor to the target and click
+    if (smooth_cursor)
+        MouseMove, %x%, %y%, 5 ; Smooth mouse movement
+    else
+        MouseMove, %x%, %y%, 0 ; Instant mouse movement
+
     SendInput, {Click}
+    if (debug_mode) {
+        Tooltip, Clicked at X: %x%`, Y: %y% ; Fixed syntax for Tooltip
+        SetTimer, ClearTooltip, -1000
+    }
+}
+
+ExpandFOV() {
+    global pixel_box, fov_expand_rate, fov_max
+    if (pixel_box < fov_max) {
+        pixel_box += fov_expand_rate
+        SetFOVBounds()
+        if (debug_mode) {
+            Tooltip, Expanding FOV: %pixel_box% pixels
+            SetTimer, ClearTooltip, -1000
+        }
+    }
+}
+
+ClearTooltip() {
+    Tooltip
 }
