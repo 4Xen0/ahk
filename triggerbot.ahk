@@ -1,43 +1,42 @@
-MsgBox, Get tappin lil cunt
-; Note: Works on any resolution. Ensure full screen and low graphics settings for best performance.
+MsgBox, Advanced Triggerbot Activated. Get tappin'.
+; Note: Works best in full screen, low graphics settings for Da Hood. Ensure FOV and sensitivity are calibrated.
 
-; Initialize
-#Persistent
-#MaxThreadsPerHotkey 2
-#KeyHistory 0
-ListLines Off
+; Initialization
 SetBatchLines, -1
 SetKeyDelay, -1, -1
 SetMouseDelay, -1
 SetDefaultMouseSpeed, 0
 SetWinDelay, -1
 SetControlDelay, -1
-SendMode Input
+SendMode, Input
 CoordMode, Pixel, Screen
 
 ; Configuration
-key_hold_mode := "-" ; To toggle On / Off
+key_hold_mode := "-" ; Toggle On / Off
 key_exit := "End" ; Panic key
-key_hold := "RButton" ; Button / Key to hold to use
+key_hold := "RButton" ; Button to hold for triggerbot
 
-pixel_box := 5 ; Fov (In Pixels)
-pixel_sens := 55 ; Color Sensitivity (lower it to make it detect fewer shades, higher to detect more)
-pixel_color := ["0x000000", "0xFFFFFF"] ; Black and White colors
+pixel_box := 10 ; Initial FOV (in pixels)
+pixel_sens := 50 ; Color Sensitivity
+pixel_color := ["0xFF5733", "0x33FF57"] ; Common player colors in Da Hood (adjust as needed)
 
-click_delay := 15 ; Delay in MS
-debug_mode := true ; Set to true to display debug messages
-smooth_cursor := true ; Set to true for smooth cursor movement
-cursor_speed := 5 ; Speed of cursor movement (lower = slower, higher = faster)
-fov_expand_rate := 10 ; Rate at which FOV expands dynamically
+click_delay := 10 ; Delay in MS between shots
+fov_expand_rate := 5 ; Rate of FOV expansion
 fov_max := 100 ; Max FOV expansion size
+smooth_cursor := true ; Smooth cursor movement
+cursor_speed := 5 ; Cursor movement speed
+debug_mode := true ; Show debug information on-screen
 
-; Calculate Screen Bounds (Centered FOV)
-original_pixel_box := pixel_box ; Save original FOV
+; Additional Features
+auto_shoot := true ; Automatically fire when a target is found
+tracking_mode := true ; Smoothly track targets before shooting
+
+; Screen Center
 center_x := A_ScreenWidth // 2
 center_y := A_ScreenHeight // 2
 SetFOVBounds()
 
-; Hotkey Setup
+; Hotkeys
 Hotkey, %key_hold_mode%, ToggleHoldMode
 Hotkey, %key_exit%, Terminate
 return
@@ -60,7 +59,7 @@ if (toggle) {
 } else {
     DebugMessage("Triggerbot Deactivated.")
     SetTimer, SearchLoop, Off
-    pixel_box := original_pixel_box ; Reset FOV
+    pixel_box := 10 ; Reset FOV
     SetFOVBounds()
 }
 return
@@ -71,41 +70,43 @@ return
 
 SearchLoop:
 While toggle and GetKeyState(key_hold, "P") {
-    PixelSearchAdvanced()
+    DetectAndShoot()
 }
 return
 
-PixelSearchAdvanced() {
-    global
-    ; Iterate through target colors
+DetectAndShoot() {
+    global auto_shoot, tracking_mode
+    ; Search for targets
     for index, color in pixel_color {
         PixelSearch, FoundX, FoundY, leftbound, topbound, rightbound, bottombound, %color%, pixel_sens, Fast RGB
         if (!ErrorLevel) {
-            ; Target found
-            if (!GetKeyState("LButton")) {
-                ClickPixel(FoundX, FoundY)
-                Sleep, click_delay
-            }
-            pixel_box := original_pixel_box ; Reset FOV
-            SetFOVBounds()
+            ; Smoothly track the target if enabled
+            if (tracking_mode)
+                SmoothCursor(FoundX, FoundY)
+            if (auto_shoot and !GetKeyState("LButton"))
+                ClickTarget(FoundX, FoundY)
+            ResetFOV()
             return
         }
     }
-    ; Expand FOV if no target is found
     ExpandFOV()
     return
 }
 
-ClickPixel(x, y) {
-    global debug_mode, smooth_cursor, cursor_speed
-    ; Move cursor to the target and click
-    if (smooth_cursor)
-        MouseMove, %x%, %y%, cursor_speed ; Smooth mouse movement
-    else
-        MouseMove, %x%, %y%, 0 ; Instant mouse movement
+SmoothCursor(x, y) {
+    global smooth_cursor, cursor_speed
+    if (smooth_cursor) {
+        MouseMove, %x%, %y%, cursor_speed
+    } else {
+        MouseMove, %x%, %y%, 0
+    }
+}
 
+ClickTarget(x, y) {
+    global click_delay, debug_mode
     SendInput, {Click}
-    DebugMessage("Clicked at X: " x ", Y: " y)
+    DebugMessage("Target Hit at X: " x ", Y: " y)
+    Sleep, click_delay
 }
 
 ExpandFOV() {
@@ -113,8 +114,14 @@ ExpandFOV() {
     if (pixel_box < fov_max) {
         pixel_box += fov_expand_rate
         SetFOVBounds()
-        DebugMessage("Expanding FOV: " pixel_box " pixels")
+        DebugMessage("Expanding FOV: " pixel_box)
     }
+}
+
+ResetFOV() {
+    global pixel_box
+    pixel_box := 10 ; Reset to initial FOV
+    SetFOVBounds()
 }
 
 DebugMessage(msg) {
