@@ -1,9 +1,9 @@
-MsgBox, ur actually black if u use this'.
+MsgBox, Advanced Triggerbot Activated. Get tappin'.
 ; Note: Works best in full screen, low graphics settings for Da Hood. Ensure FOV and sensitivity are calibrated.
 
 ; Initialization
 SetBatchLines, -1 ; Maximize processing speed
-SetKeyDelay, 0, 0 ; Minimum delay between key presses and releases
+SetKeyDelay, 0 ; Minimum delay between key presses
 SetMouseDelay, 0 ; No delay for mouse movements
 SetDefaultMouseSpeed, 0 ; Instant mouse movement
 SetWinDelay, 0 ; No delay for window actions
