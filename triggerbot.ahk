@@ -1,5 +1,5 @@
 MsgBox, Advanced Triggerbot Activated. Get tappin'.
-msgbox, if it doesnt work make a ticket in dc
+MsgBox, if it doesnt work make a ticket in dc'.
 ; Note: Works best in full screen, low graphics settings for Da Hood. Ensure FOV and sensitivity are calibrated.
 
 ; Initialization
