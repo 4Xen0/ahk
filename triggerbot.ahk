@@ -1,6 +1,4 @@
-﻿; Advanced Triggerbot Script with Enhanced Search Logic
-
-MsgBox, TB loaded. Open Roblox. (If already opened, you're good to go!) Get tappin!
+MsgBox, get tappin lil cunt
 ; Note: Must be in 1920x1080 resolution, full screen, low graphics settings.
 
 ; Initialize
